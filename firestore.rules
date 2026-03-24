@@ -1,0 +1,70 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: markers
+// Document ID: auto-generated
+// Fields:
+//   - lat: number (required) - Latitude of the marker
+//   - lng: number (required) - Longitude of the marker
+//   - type: string (required, enum: ['text', 'photo', 'video']) - Type of content
+//   - content: string (required, max 5000 chars) - Text content or media URL
+//   - authorUid: string (required) - UID of the creator
+//   - authorName: string (optional) - Display name of the creator
+//   - createdAt: timestamp (required) - Creation time
+//   - title: string (optional, max 100 chars) - Title of the marker
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.authorUid;
+    }
+
+    function isValidMarker(data) {
+      return data.lat is number &&
+             data.lng is number &&
+             data.type in ['text', 'photo', 'video'] &&
+             data.content is string && data.content.size() <= 5000 &&
+             data.authorUid is string &&
+             data.createdAt is timestamp &&
+             (!('title' in data) || (data.title is string && data.title.size() <= 100));
+    }
+
+    // ===============================================================
+    // Collection: markers
+    // ===============================================================
+
+    match /markers/{markerId} {
+      // Anyone can read markers to see them on the map
+      allow read: if true;
+
+      // Only authenticated users can create markers
+      allow create: if isAuthenticated() && 
+                      isValidMarker(request.resource.data) &&
+                      request.resource.data.authorUid == request.auth.uid;
+
+      // Only the author can update or delete their markers
+      allow update: if isDocOwner() && 
+                      isValidMarker(request.resource.data) &&
+                      request.resource.data.authorUid == resource.data.authorUid;
+
+      allow delete: if isDocOwner();
+    }
+  }
+}

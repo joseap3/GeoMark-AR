@@ -1,0 +1,5 @@
+{
+  "name": "GeoMark AR",
+  "description": "A real-world GPS game where you leave digital time capsules (text, photos, videos) at physical locations and view them through an AR camera.",
+  "requestFramePermissions": ["camera", "geolocation"]
+}

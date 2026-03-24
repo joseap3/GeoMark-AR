@@ -1,0 +1,26 @@
+{
+  "entities": {
+    "Marker": {
+      "title": "Marker",
+      "description": "A GPS-based marker with content (text, photo, or video).",
+      "type": "object",
+      "properties": {
+        "lat": { "type": "number", "description": "Latitude of the marker." },
+        "lng": { "type": "number", "description": "Longitude of the marker." },
+        "type": { "type": "string", "enum": ["text", "photo", "video"], "description": "Type of content stored." },
+        "content": { "type": "string", "description": "The text content or media URL." },
+        "authorUid": { "type": "string", "description": "UID of the user who created the marker." },
+        "authorName": { "type": "string", "description": "Display name of the author." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the marker was created." },
+        "title": { "type": "string", "description": "Title of the marker." }
+      },
+      "required": ["lat", "lng", "type", "content", "authorUid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/markers/{markerId}": {
+      "schema": "Marker",
+      "description": "Collection of all GPS markers."
+    }
+  }
+}
