@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Component, ErrorInfo, ReactNode } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { Map as MapIcon, Camera, Plus, LogIn, LogOut, X, Send, Video, Image as ImageIcon, Type, Navigation } from 'lucide-react';
@@ -197,9 +197,61 @@ const ARView = ({ markers, userPos, heading }: { markers: MarkerData[], userPos:
   );
 };
 
-// --- Main App ---
+// --- Error Boundary ---
 
-export default function App() {
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-red-50 p-6 text-center">
+          <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+            <X size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-red-900 mb-2">Ops! Algo deu errado.</h1>
+          <p className="text-red-700 mb-4 max-w-md">
+            Ocorreu um erro inesperado. Tente recarregar a página.
+          </p>
+          <pre className="bg-red-100 p-4 rounded-xl text-xs text-red-800 overflow-auto max-w-full text-left">
+            {this.state.error?.message}
+          </pre>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-6 bg-red-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-700 transition-colors"
+          >
+            Recarregar Página
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// --- Main App Wrapper ---
+
+export default function AppWrapper() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
+
+function App() {
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<'map' | 'ar'>('map');
   const [markers, setMarkers] = useState<MarkerData[]>([]);
